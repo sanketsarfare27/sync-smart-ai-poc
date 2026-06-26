@@ -1,0 +1,66 @@
+[
+  {
+    "file_name": "clean_update_set.xml",
+    "update_set_name": "Clean Update Set",
+    "objects_count": 2,
+    "issues": [],
+    "score": 100,
+    "decision": "Allow Sync",
+    "ai_summary": "No major risk found. Update set appears safe for GitHub sync."
+  },
+  {
+    "file_name": "conflict_update_set.xml",
+    "update_set_name": "Conflict Update Set",
+    "objects_count": 1,
+    "issues": [
+      {
+        "severity": "Critical",
+        "issue": "Conflict detected: sys_id BR001 already exists in GitHub baseline",
+        "object_name": "Auto Assign Incident",
+        "object_type": "Business Rule",
+        "recommendation": "Review existing GitHub object before syncing this update set."
+      }
+    ],
+    "score": 55,
+    "decision": "Block Sync",
+    "ai_summary": "Validation found 1 issue(s): 1 Critical, 0 High, 0 Medium, 0 Low. Final decision is Block Sync with confidence score 55/100."
+  },
+  {
+    "file_name": "risky_update_set.xml",
+    "update_set_name": "Risky Update Set",
+    "objects_count": 1,
+    "issues": [
+      {
+        "severity": "Critical",
+        "issue": "Hardcoded password found",
+        "object_name": "Update Incident Risky Rule",
+        "object_type": "Business Rule",
+        "recommendation": "Move secrets to secure credential store or system properties."
+      },
+      {
+        "severity": "Critical",
+        "issue": "Hardcoded token found",
+        "object_name": "Update Incident Risky Rule",
+        "object_type": "Business Rule",
+        "recommendation": "Move secrets to secure credential store or system properties."
+      },
+      {
+        "severity": "High",
+        "issue": "current.update() used in script",
+        "object_name": "Update Incident Risky Rule",
+        "object_type": "Business Rule",
+        "recommendation": "Review script logic. Avoid risky operations before deployment."
+      },
+      {
+        "severity": "Medium",
+        "issue": "Missing dependency: MissingHelper",
+        "object_name": "Update Incident Risky Rule",
+        "object_type": "Business Rule",
+        "recommendation": "Include missing dependency in the update set or confirm it exists in target environment."
+      }
+    ],
+    "score": 0,
+    "decision": "Block Sync",
+    "ai_summary": "Validation found 4 issue(s): 2 Critical, 1 High, 1 Medium, 0 Low. Final decision is Block Sync with confidence score 0/100."
+  }
+]

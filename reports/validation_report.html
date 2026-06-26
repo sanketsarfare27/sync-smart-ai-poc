@@ -1,0 +1,147 @@
+
+    <html>
+    <head>
+        <title>Sync Smart AI - Day 1 Validation Report</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 30px;
+                background: #f7f7f7;
+            }
+            h1 {
+                color: #333;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                background: white;
+            }
+            th, td {
+                border: 1px solid #ccc;
+                padding: 12px;
+                vertical-align: top;
+            }
+            th {
+                background: #eeeeee;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Sync Smart AI - Day 1 Validation Report</h1>
+        <p>ServiceNow Update Set pre-sync validation report.</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Update Set</th>
+                    <th>File</th>
+                    <th>Confidence Score</th>
+                    <th>Decision</th>
+                    <th>Issues & Summary</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+        <tr>
+            <td>Clean Update Set</td>
+            <td>clean_update_set.xml</td>
+            <td>100/100</td>
+            <td><b>Allow Sync</b></td>
+            <td>
+                <ul><li>No issues found</li></ul>
+                <p><b>Summary:</b> No major risk found. Update set appears safe for GitHub sync.</p>
+            </td>
+        </tr>
+        
+        <tr>
+            <td>Conflict Update Set</td>
+            <td>conflict_update_set.xml</td>
+            <td>55/100</td>
+            <td><b>Block Sync</b></td>
+            <td>
+                <ul>
+                <li>
+                    <b>Critical</b> - 
+                    Conflict detected: sys_id BR001 already exists in GitHub baseline
+                    <br/>
+                    <small>
+                        Object: Business Rule - Auto Assign Incident
+                    </small>
+                    <br/>
+                    <small>
+                        Recommendation: Review existing GitHub object before syncing this update set.
+                    </small>
+                </li>
+                </ul>
+                <p><b>Summary:</b> Validation found 1 issue(s): 1 Critical, 0 High, 0 Medium, 0 Low. Final decision is Block Sync with confidence score 55/100.</p>
+            </td>
+        </tr>
+        
+        <tr>
+            <td>Risky Update Set</td>
+            <td>risky_update_set.xml</td>
+            <td>0/100</td>
+            <td><b>Block Sync</b></td>
+            <td>
+                <ul>
+                <li>
+                    <b>Critical</b> - 
+                    Hardcoded password found
+                    <br/>
+                    <small>
+                        Object: Business Rule - Update Incident Risky Rule
+                    </small>
+                    <br/>
+                    <small>
+                        Recommendation: Move secrets to secure credential store or system properties.
+                    </small>
+                </li>
+                
+                <li>
+                    <b>Critical</b> - 
+                    Hardcoded token found
+                    <br/>
+                    <small>
+                        Object: Business Rule - Update Incident Risky Rule
+                    </small>
+                    <br/>
+                    <small>
+                        Recommendation: Move secrets to secure credential store or system properties.
+                    </small>
+                </li>
+                
+                <li>
+                    <b>High</b> - 
+                    current.update() used in script
+                    <br/>
+                    <small>
+                        Object: Business Rule - Update Incident Risky Rule
+                    </small>
+                    <br/>
+                    <small>
+                        Recommendation: Review script logic. Avoid risky operations before deployment.
+                    </small>
+                </li>
+                
+                <li>
+                    <b>Medium</b> - 
+                    Missing dependency: MissingHelper
+                    <br/>
+                    <small>
+                        Object: Business Rule - Update Incident Risky Rule
+                    </small>
+                    <br/>
+                    <small>
+                        Recommendation: Include missing dependency in the update set or confirm it exists in target environment.
+                    </small>
+                </li>
+                </ul>
+                <p><b>Summary:</b> Validation found 4 issue(s): 2 Critical, 1 High, 1 Medium, 0 Low. Final decision is Block Sync with confidence score 0/100.</p>
+            </td>
+        </tr>
+        
+            </tbody>
+        </table>
+    </body>
+    </html>
+    

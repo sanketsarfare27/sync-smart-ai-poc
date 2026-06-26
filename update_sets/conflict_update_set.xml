@@ -1,0 +1,13 @@
+<update_set name="Conflict Update Set">
+    <object>
+        <type>Business Rule</type>
+        <name>Auto Assign Incident</name>
+        <sys_id>BR001</sys_id>
+        <script>
+            if (current.priority == 1) {
+                current.assignment_group = "Critical Support";
+            }
+        </script>
+        <dependencies></dependencies>
+    </object>
+</update_set>

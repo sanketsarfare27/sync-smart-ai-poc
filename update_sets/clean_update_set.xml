@@ -1,0 +1,29 @@
+<update_set name="Clean Update Set">
+    <object>
+        <type>Business Rule</type>
+        <name>Validate Incident Assignment</name>
+        <sys_id>BR100</sys_id>
+        <script>
+            if (current.assignment_group.nil()) {
+                current.assignment_group = "Service Desk";
+            }
+        </script>
+        <dependencies>
+            <dependency>IncidentUtils</dependency>
+        </dependencies>
+    </object>
+
+    <object>
+        <type>Script Include</type>
+        <name>IncidentUtils</name>
+        <sys_id>SI100</sys_id>
+        <script>
+            var IncidentUtils = Class.create();
+            IncidentUtils.prototype = {
+                initialize: function() {},
+                type: 'IncidentUtils'
+            };
+        </script>
+        <dependencies></dependencies>
+    </object>
+</update_set>

@@ -1,0 +1,16 @@
+<update_set name="Risky Update Set">
+    <object>
+        <type>Business Rule</type>
+        <name>Update Incident Risky Rule</name>
+        <sys_id>BR200</sys_id>
+        <script>
+            var password = "admin123";
+            var token = "abc-secret-token";
+            current.short_description = "Updated by risky rule";
+            current.update();
+        </script>
+        <dependencies>
+            <dependency>MissingHelper</dependency>
+        </dependencies>
+    </object>
+</update_set>

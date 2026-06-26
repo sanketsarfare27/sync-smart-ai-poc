@@ -1,0 +1,14 @@
+{
+  "objects": [
+    {
+      "type": "Business Rule",
+      "name": "Auto Assign Incident",
+      "sys_id": "BR001"
+    },
+    {
+      "type": "Script Include",
+      "name": "CommonUtils",
+      "sys_id": "SI001"
+    }
+  ]
+}
