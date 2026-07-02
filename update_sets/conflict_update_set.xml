@@ -1,13 +1,19 @@
-<update_set name="Conflict Update Set">
-    <object>
-        <type>Business Rule</type>
-        <name>Auto Assign Incident</name>
-        <sys_id>BR001</sys_id>
-        <script>
-            if (current.priority == 1) {
-                current.assignment_group = "Critical Support";
-            }
-        </script>
-        <dependencies></dependencies>
-    </object>
-</update_set>
+<?xml version="1.0" encoding="UTF-8"?>
+<unload unload_date="2026-06-28 09:00:00">
+  <sys_update_set action="INSERT_OR_UPDATE">
+    <name>Conflict Update Set</name>
+    <description>Update set with object collision against baseline.</description>
+  </sys_update_set>
+  <sys_script action="INSERT_OR_UPDATE">
+    <sys_id>existing_br_001</sys_id>
+    <name>Existing Incident Assignment Rule</name>
+    <collection>incident</collection>
+    <when>before</when>
+    <condition>current.assignment_group.nil()</condition>
+    <script><![CDATA[
+(function executeRule(current, previous) {
+  current.assignment_group = gs.getProperty('incident.default.assignment_group');
+})(current, previous);
+    ]]></script>
+  </sys_script>
+</unload>

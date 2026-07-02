@@ -1,16 +1,24 @@
-<update_set name="Risky Update Set">
-    <object>
-        <type>Business Rule</type>
-        <name>Update Incident Risky Rule</name>
-        <sys_id>BR200</sys_id>
-        <script>
-            var password = "admin123";
-            var token = "abc-secret-token";
-            current.short_description = "Updated by risky rule";
-            current.update();
-        </script>
-        <dependencies>
-            <dependency>MissingHelper</dependency>
-        </dependencies>
-    </object>
-</update_set>
+<?xml version="1.0" encoding="UTF-8"?>
+<unload unload_date="2026-06-28 09:00:00">
+  <sys_update_set action="INSERT_OR_UPDATE">
+    <name>Risky Update Set</name>
+    <description>High-risk update set for demo validation.</description>
+  </sys_update_set>
+  <sys_script action="INSERT_OR_UPDATE">
+    <sys_id>risky_br_001</sys_id>
+    <name>Delete Old Users</name>
+    <collection>sys_user</collection>
+    <when>after</when>
+    <condition></condition>
+    <script><![CDATA[
+(function executeRule(current, previous) {
+  var apiToken = 'sk_live_1234567890abcdef';
+  var gr = new GlideRecord('sys_user');
+  gr.addQuery('active', false);
+  gr.query();
+  gr.deleteMultiple();
+  gs.log(apiToken);
+})(current, previous);
+    ]]></script>
+  </sys_script>
+</unload>
