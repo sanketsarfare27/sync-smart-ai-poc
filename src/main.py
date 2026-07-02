@@ -1,158 +1,71 @@
-from pathlib import Path
+from __future__ import annotations
+
+import argparse
 import json
-import html
+import os
+from pathlib import Path
+from typing import Any
 
+from ai_reviewer import review_risk
+from check_gate import governance_decision, should_fail_pipeline
 from parser import parse_update_set
-from rule_validator import load_baseline, validate_update_set
-from scorer import calculate_score_and_decision
-from ai_reviewer import generate_ai_summary
+from post_to_servicenow import post_result
+from rule_validator import load_baseline, validate_rules
+from scorer import calculate_score, risk_level
 
 
-ROOT_DIR = Path(__file__).resolve().parents[1]
-UPDATE_SET_DIR = ROOT_DIR / "update_sets"
-BASELINE_FILE = ROOT_DIR / "baseline" / "existing_objects.json"
-REPORTS_DIR = ROOT_DIR / "reports"
+def build_payload(update_set_path: Path, baseline_path: Path) -> dict[str, Any]:
+    parsed = parse_update_set(update_set_path)
+    baseline = load_baseline(baseline_path)
+    issues = validate_rules(parsed, baseline)
+    score = calculate_score(issues)
+    decision = governance_decision(score, issues)
+    ai_review = review_risk(parsed.update_set_name, issues)
+
+    return {
+        "update_set_name": parsed.update_set_name,
+        "file_name": parsed.file_name,
+        "score": score,
+        "confidence_score": score,
+        "decision": decision,
+        "risk_level": risk_level(score, issues),
+        "review_status": "Received",
+        "issues": issues,
+        "issues_json": json.dumps(issues, indent=2),
+        **ai_review,
+        "github_repo": os.getenv("GITHUB_REPOSITORY", "sanketsarfare27/sync-smart-ai-poc"),
+        "github_run_url": os.getenv("GITHUB_RUN_URL", "GitHub Action run URL"),
+        "branch": os.getenv("GITHUB_REF_NAME", "main"),
+        "commit_sha": os.getenv("GITHUB_SHA", "commit id"),
+    }
 
 
-def build_html_report(results):
-    rows = ""
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Validate ServiceNow update set before sync.")
+    parser.add_argument("--update-set", required=True, help="Path to update set XML")
+    parser.add_argument("--baseline", default="baseline/existing_objects.json", help="Path to baseline JSON")
+    parser.add_argument("--report-dir", default="reports", help="Folder where JSON reports are written")
+    parser.add_argument("--post-servicenow", action="store_true", help="POST result to ServiceNow endpoint")
+    args = parser.parse_args()
 
-    for result in results:
-        issue_items = ""
+    update_set_path = Path(args.update_set)
+    baseline_path = Path(args.baseline)
+    report_dir = Path(args.report_dir)
+    report_dir.mkdir(parents=True, exist_ok=True)
 
-        if result["issues"]:
-            for issue in result["issues"]:
-                issue_items += f"""
-                <li>
-                    <b>{html.escape(issue['severity'])}</b> - 
-                    {html.escape(issue['issue'])}
-                    <br/>
-                    <small>
-                        Object: {html.escape(issue['object_type'])} - {html.escape(issue['object_name'])}
-                    </small>
-                    <br/>
-                    <small>
-                        Recommendation: {html.escape(issue['recommendation'])}
-                    </small>
-                </li>
-                """
-        else:
-            issue_items = "<li>No issues found</li>"
+    payload = build_payload(update_set_path, baseline_path)
+    report_path = report_dir / f"{update_set_path.stem}_report.json"
+    report_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
-        rows += f"""
-        <tr>
-            <td>{html.escape(result['update_set_name'])}</td>
-            <td>{html.escape(result['file_name'])}</td>
-            <td>{result['score']}/100</td>
-            <td><b>{html.escape(result['decision'])}</b></td>
-            <td>
-                <ul>{issue_items}</ul>
-                <p><b>Summary:</b> {html.escape(result['ai_summary'])}</p>
-            </td>
-        </tr>
-        """
+    print(json.dumps(payload, indent=2))
+    print(f"Report written: {report_path}")
 
-    return f"""
-    <html>
-    <head>
-        <title>Sync Smart AI - Day 1 Validation Report</title>
-        <style>
-            body {{
-                font-family: Arial, sans-serif;
-                margin: 30px;
-                background: #f7f7f7;
-            }}
-            h1 {{
-                color: #333;
-            }}
-            table {{
-                width: 100%;
-                border-collapse: collapse;
-                background: white;
-            }}
-            th, td {{
-                border: 1px solid #ccc;
-                padding: 12px;
-                vertical-align: top;
-            }}
-            th {{
-                background: #eeeeee;
-            }}
-        </style>
-    </head>
-    <body>
-        <h1>Sync Smart AI - Day 1 Validation Report</h1>
-        <p>ServiceNow Update Set pre-sync validation report.</p>
+    if args.post_servicenow:
+        post_status = post_result(payload)
+        print(json.dumps(post_status, indent=2))
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Update Set</th>
-                    <th>File</th>
-                    <th>Confidence Score</th>
-                    <th>Decision</th>
-                    <th>Issues & Summary</th>
-                </tr>
-            </thead>
-            <tbody>
-                {rows}
-            </tbody>
-        </table>
-    </body>
-    </html>
-    """
-
-
-def main():
-    REPORTS_DIR.mkdir(exist_ok=True)
-
-    baseline = load_baseline(BASELINE_FILE)
-    results = []
-
-    xml_files = sorted(UPDATE_SET_DIR.glob("*.xml"))
-
-    if not xml_files:
-        print("No update set XML files found in update_sets folder.")
-        return
-
-    for xml_file in xml_files:
-        update_set = parse_update_set(xml_file)
-        issues = validate_update_set(update_set, baseline)
-        score, decision = calculate_score_and_decision(issues)
-        ai_summary = generate_ai_summary(update_set, issues, score, decision)
-
-        result = {
-            "file_name": update_set["file_name"],
-            "update_set_name": update_set["update_set_name"],
-            "objects_count": len(update_set["objects"]),
-            "issues": issues,
-            "score": score,
-            "decision": decision,
-            "ai_summary": ai_summary
-        }
-
-        results.append(result)
-
-        print("-----------------------------------")
-        print(f"Update Set: {result['update_set_name']}")
-        print(f"File: {result['file_name']}")
-        print(f"Score: {score}/100")
-        print(f"Decision: {decision}")
-        print(f"Issues Found: {len(issues)}")
-
-    json_report_path = REPORTS_DIR / "day1_validation_report.json"
-    html_report_path = REPORTS_DIR / "validation_report.html"
-
-    with open(json_report_path, "w", encoding="utf-8") as file:
-        json.dump(results, file, indent=2)
-
-    with open(html_report_path, "w", encoding="utf-8") as file:
-        file.write(build_html_report(results))
-
-    print("-----------------------------------")
-    print(f"JSON report generated: {json_report_path}")
-    print(f"HTML report generated: {html_report_path}")
+    return 1 if should_fail_pipeline(payload["decision"]) else 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

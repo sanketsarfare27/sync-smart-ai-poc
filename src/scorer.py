@@ -1,28 +1,26 @@
-def calculate_score_and_decision(issues):
-    """
-    Calculates confidence score based on issue severity.
-    """
+from __future__ import annotations
 
-    penalty_map = {
-        "Critical": 45,
-        "High": 25,
-        "Medium": 15,
-        "Low": 5
-    }
 
+PENALTY_BY_SEVERITY = {
+    "Critical": 100,
+    "High": 35,
+    "Medium": 15,
+    "Low": 5,
+}
+
+
+def calculate_score(issues: list[dict[str, str]]) -> int:
     score = 100
-
     for issue in issues:
-        severity = issue.get("severity", "Low")
-        score -= penalty_map.get(severity, 5)
+        score -= PENALTY_BY_SEVERITY.get(issue["severity"], 10)
+    return max(score, 0)
 
-    score = max(score, 0)
 
-    if score >= 80:
-        decision = "Allow Sync"
-    elif score >= 60:
-        decision = "Manual Review"
-    else:
-        decision = "Block Sync"
-
-    return score, decision
+def risk_level(score: int, issues: list[dict[str, str]]) -> str:
+    if any(issue["severity"] == "Critical" for issue in issues) or score == 0:
+        return "Critical"
+    if score < 70:
+        return "High"
+    if score < 90:
+        return "Medium"
+    return "Low"
