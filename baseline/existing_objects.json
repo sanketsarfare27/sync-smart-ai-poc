@@ -1,14 +1,20 @@
 {
   "objects": [
     {
-      "type": "Business Rule",
-      "name": "Auto Assign Incident",
-      "sys_id": "BR001"
+      "sys_id": "existing_br_001",
+      "type": "sys_script",
+      "name": "Existing Incident Assignment Rule",
+      "table": "incident",
+      "owner": "platform-team",
+      "last_validated": "2026-06-20"
     },
     {
-      "type": "Script Include",
-      "name": "CommonUtils",
-      "sys_id": "SI001"
+      "sys_id": "existing_ui_001",
+      "type": "sys_ui_action",
+      "name": "Close Incident",
+      "table": "incident",
+      "owner": "itsm-team",
+      "last_validated": "2026-06-21"
     }
   ]
 }
